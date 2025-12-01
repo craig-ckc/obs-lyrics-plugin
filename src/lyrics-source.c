@@ -5,7 +5,11 @@
 #include <graphics/image-file.h>
 #include <obs-module.h>
 #include <sys/types.h>
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <dirent.h>
+#endif
 
 /* ------------------------------------------------------------------------- */
 /* Data Structure                                                            */
@@ -125,6 +129,30 @@ static void refresh_files(struct lyrics_source *context)
 	if (!context->lyrics_folder || !*context->lyrics_folder)
 		return;
 
+#ifdef _WIN32
+	/* Use Win32 API on Windows (MSVC doesn't provide dirent.h) */
+	char search_path[MAX_PATH];
+	snprintf(search_path, MAX_PATH, "%s\\*", context->lyrics_folder);
+
+	WIN32_FIND_DATAA find_data;
+	HANDLE hFind = FindFirstFileA(search_path, &find_data);
+	if (hFind == INVALID_HANDLE_VALUE)
+		return;
+
+	do {
+		const char *name = find_data.cFileName;
+		if (name[0] == '.')
+			continue;
+		const char *ext = strrchr(name, '.');
+		if (ext && _stricmp(ext, ".txt") == 0) {
+			struct dstr dname = {0};
+			dstr_copy(&dname, name);
+			dstr_array_push_back(&context->files, &dname);
+		}
+	} while (FindNextFileA(hFind, &find_data));
+
+	FindClose(hFind);
+#else
 	DIR *dir = opendir(context->lyrics_folder);
 	if (!dir) return;
 
@@ -139,6 +167,7 @@ static void refresh_files(struct lyrics_source *context)
 		}
 	}
 	closedir(dir);
+#endif
 	
 	/* Sort files alphabetically? For now, OS order (usually undefined/creation) */
 	/* TODO: Sort */
