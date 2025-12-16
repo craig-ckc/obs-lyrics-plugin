@@ -7,7 +7,13 @@
 #include <QTextStream>
 #include <QFileDialog>
 #include <QMainWindow>
+#include <QFileInfo>
+#include <QDir>
+#include <QString>
+#include <QStringList>
 #include <graphics/image-file.h>
+#include <vector>
+#include <cmath>
 
 #define TEXT_FONT_NAME "font_name"
 #define TEXT_FONT_SIZE "font_size"
@@ -29,8 +35,16 @@
 #define LYRICS_FILES "lyrics_files"
 #define USE_FOLDER "use_folder"
 
+// Internal data structure to hold Qt types
+struct lyrics_source_data {
+    std::vector<QStringList> songs;
+    std::vector<QString> song_names;
+};
+
 static void load_lyrics_from_file(lyrics_source *ls, const QString &filepath)
 {
+    lyrics_source_data *data = static_cast<lyrics_source_data*>(ls->songs_data);
+    
     QFile file(filepath);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
         return;
@@ -44,16 +58,17 @@ static void load_lyrics_from_file(lyrics_source *ls, const QString &filepath)
     }
     
     if (!lines.isEmpty()) {
-        ls->songs.push_back(lines);
+        data->songs.push_back(lines);
         QFileInfo fileInfo(filepath);
-        ls->song_names.push_back(fileInfo.baseName());
+        data->song_names.push_back(fileInfo.baseName());
     }
 }
 
 static void load_lyrics_files(lyrics_source *ls)
 {
-    ls->songs.clear();
-    ls->song_names.clear();
+    lyrics_source_data *data = static_cast<lyrics_source_data*>(ls->songs_data);
+    data->songs.clear();
+    data->song_names.clear();
     ls->current_song = 0;
     ls->current_line = 0;
     
@@ -84,15 +99,16 @@ static void update_text_source(lyrics_source *ls)
     if (!ls->text_source)
         return;
     
+    lyrics_source_data *data = static_cast<lyrics_source_data*>(ls->songs_data);
     obs_data_t *settings = obs_data_create();
     
     // Set text content
     QString text;
     if (ls->text_visible && ls->current_song >= 0 && 
-        ls->current_song < (int)ls->songs.size() &&
+        ls->current_song < (int)data->songs.size() &&
         ls->current_line >= 0 && 
-        ls->current_line < ls->songs[ls->current_song].size()) {
-        text = ls->songs[ls->current_song][ls->current_line];
+        ls->current_line < data->songs[ls->current_song].size()) {
+        text = data->songs[ls->current_song][ls->current_line];
     }
     
     obs_data_set_string(settings, "text", text.toUtf8().constData());
@@ -152,6 +168,9 @@ void *lyrics_source_create(obs_data_t *settings, obs_source_t *source)
     lyrics_source *ls = (lyrics_source *)bzalloc(sizeof(lyrics_source));
     ls->source = source;
     
+    // Create internal data structure
+    ls->songs_data = new lyrics_source_data();
+    
     // Initialize defaults
     ls->text_visible = true;
     ls->current_song = 0;
@@ -200,6 +219,10 @@ void lyrics_source_destroy(void *data)
         gs_texture_destroy(ls->background_texture);
     if (ls->text_source)
         obs_source_release(ls->text_source);
+    
+    // Delete internal data structure
+    if (ls->songs_data)
+        delete static_cast<lyrics_source_data*>(ls->songs_data);
     
     bfree(ls->background_file);
     bfree(ls->font_name);
@@ -314,14 +337,15 @@ uint32_t lyrics_source_get_height(void *data)
 void lyrics_source_next(void *data)
 {
     lyrics_source *ls = (lyrics_source *)data;
-    if (ls->songs.empty())
+    lyrics_source_data *ldata = static_cast<lyrics_source_data*>(ls->songs_data);
+    if (ldata->songs.empty())
         return;
     
     ls->current_line++;
-    if (ls->current_line >= ls->songs[ls->current_song].size()) {
+    if (ls->current_line >= ldata->songs[ls->current_song].size()) {
         ls->current_line = 0;
         ls->current_song++;
-        if (ls->current_song >= (int)ls->songs.size())
+        if (ls->current_song >= (int)ldata->songs.size())
             ls->current_song = 0;
     }
     
@@ -331,15 +355,16 @@ void lyrics_source_next(void *data)
 void lyrics_source_previous(void *data)
 {
     lyrics_source *ls = (lyrics_source *)data;
-    if (ls->songs.empty())
+    lyrics_source_data *ldata = static_cast<lyrics_source_data*>(ls->songs_data);
+    if (ldata->songs.empty())
         return;
     
     ls->current_line--;
     if (ls->current_line < 0) {
         ls->current_song--;
         if (ls->current_song < 0)
-            ls->current_song = ls->songs.size() - 1;
-        ls->current_line = ls->songs[ls->current_song].size() - 1;
+            ls->current_song = ldata->songs.size() - 1;
+        ls->current_line = ldata->songs[ls->current_song].size() - 1;
     }
     
     update_text_source(ls);

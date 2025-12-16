@@ -1,12 +1,10 @@
 #pragma once
 
 #include <obs-module.h>
-#include <QWidget>
-#include <QString>
-#include <QStringList>
-#include <QDir>
-#include <vector>
-#include <string>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct lyrics_source {
     obs_source_t *source;
@@ -15,9 +13,9 @@ struct lyrics_source {
     gs_texture_t *background_texture;
     char *background_file;
     
-    // Lyrics data
-    std::vector<QStringList> songs;
-    std::vector<QString> song_names;
+    // Lyrics data - using void* to hide C++ implementation
+    void *songs_data;
+    void *song_names_data;
     int current_song;
     int current_line;
     bool text_visible;
@@ -67,3 +65,7 @@ void lyrics_source_get_defaults(obs_data_t *settings);
 void lyrics_source_next(void *data);
 void lyrics_source_previous(void *data);
 void lyrics_source_toggle_text(void *data);
+
+#ifdef __cplusplus
+}
+#endif
