@@ -58,25 +58,9 @@ static void stop_action(void *data)
 }
 
 static struct source_toolbar_action toolbar_actions[] = {
-    {
-        .id = "lyrics.prev",
-        .text = "Previous",
-        .icon = "media-skip-backward",
-        .callback = prev_action
-    },
-    {
-        .id = "lyrics.stop",
-        .text = "Show/Hide",
-        .icon = "media-playback-stop",
-        .callback = stop_action
-    },
-    {
-        .id = "lyrics.next",
-        .text = "Next",
-        .icon = "media-skip-forward",
-        .callback = next_action
-    }
-};
+    {"lyrics.prev", "Previous", "media-skip-backward", prev_action},
+    {"lyrics.stop", "Show/Hide", "media-playback-stop", stop_action},
+    {"lyrics.next", "Next", "media-skip-forward", next_action}};
 
 // Register toolbar actions with OBS
 void lyrics_source_register_toolbar_actions()
