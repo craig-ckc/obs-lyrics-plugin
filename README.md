@@ -1,59 +1,116 @@
-# OBS Plugin Template
+# OBS Lyrics Plugin
 
 ## Introduction
 
-The plugin template is meant to be used as a starting point for OBS Studio plugin development. It includes:
+The OBS Lyrics Plugin allows you to display lyrics with a background image in your OBS streams. It supports loading lyrics from text files, customizable text styling, and easy navigation through lyrics during your stream.
 
-* Boilerplate plugin source code
-* A CMake project file
-* GitHub Actions workflows and repository actions
+## Features
 
-## Supported Build Environments
+- **Background Image Support**: Display lyrics over any image background
+- **Flexible Lyrics Loading**: Load from a folder of .txt files or select individual files
+- **Text Customization**:
+  - Font selection, size, and weight
+  - Text color with transparency support
+  - Outline with customizable size and color
+  - Shadow effects with offset control
+- **Text Positioning**:
+  - Horizontal alignment: Left, Center, Right
+  - Vertical alignment: Top, Center, Bottom
+  - Customizable text bounding box with word wrapping
+- **Navigation Controls**:
+  - Next/Previous buttons in source toolbar
+  - Show/Hide text functionality
+  - Hotkey support for all controls
 
-| Platform  | Tool   |
-|-----------|--------|
-| Windows   | Visual Studio 17 2022 |
-| macOS     | XCode 16.0 |
-| Windows, macOS  | CMake 3.30.5 |
-| Ubuntu 24.04 | CMake 3.28.3 |
-| Ubuntu 24.04 | `ninja-build` |
-| Ubuntu 24.04 | `pkg-config`
-| Ubuntu 24.04 | `build-essential` |
+## Installation
 
-## Quick Start
+1. Download the latest release for your platform
+2. Copy the plugin files to your OBS plugins directory:
+   - **Windows**: `C:\Program Files\obs-studio\obs-plugins\64bit`
+   - **macOS**: `/Library/Application Support/obs-studio/plugins`
+   - **Linux**: `/usr/lib/obs-plugins`
+3. Restart OBS Studio
 
-An absolute bare-bones [Quick Start Guide](https://github.com/obsproject/obs-plugintemplate/wiki/Quick-Start-Guide) is available in the wiki.
+## Usage
 
-## Documentation
+### Adding the Lyrics Source
 
-All documentation can be found in the [Plugin Template Wiki](https://github.com/obsproject/obs-plugintemplate/wiki).
+1. In OBS, click the **+** button in Sources
+2. Select **Lyrics Display** from the list
+3. Give your source a name and click OK
 
-Suggested reading to get up and running:
+### Configuring the Source
 
-* [Getting started](https://github.com/obsproject/obs-plugintemplate/wiki/Getting-Started)
-* [Build system requirements](https://github.com/obsproject/obs-plugintemplate/wiki/Build-System-Requirements)
-* [Build system options](https://github.com/obsproject/obs-plugintemplate/wiki/CMake-Build-System-Options)
+In the properties window, you can configure:
 
-## GitHub Actions & CI
+1. **Background Image**: Click Browse to select an image file that will serve as the background
+2. **Lyrics Files**:
+   - Check **Use Folder** to select a folder containing .txt files
+   - Uncheck to select individual .txt files
+3. **Text Position**:
+   - Set horizontal and vertical alignment
+   - Configure text width and height for word wrapping
+4. **Text Style**:
+   - Choose font, size, and weight
+   - Set text color
+   - Enable/configure outline and shadow effects
 
-Default GitHub Actions workflows are available for the following repository actions:
+### Lyrics File Format
 
-* `push`: Run for commits or tags pushed to `master` or `main` branches.
-* `pr-pull`: Run when a Pull Request has been pushed or synchronized.
-* `dispatch`: Run when triggered by the workflow dispatch in GitHub's user interface.
-* `build-project`: Builds the actual project and is triggered by other workflows.
-* `check-format`: Checks CMake and plugin source code formatting and is triggered by other workflows.
+Create .txt files with your lyrics following this format:
+- Each line in the file represents one slide/screen of lyrics
+- Empty lines are ignored
+- File names will be used as song titles
 
-The workflows make use of GitHub repository actions (contained in `.github/actions`) and build scripts (contained in `.github/scripts`) which are not needed for local development, but might need to be adjusted if additional/different steps are required to build the plugin.
+Example lyrics file (`amazing-grace.txt`):
+```
+Amazing grace, how sweet the sound
+That saved a wretch like me
+I once was lost, but now am found
+Was blind, but now I see
+```
 
-### Retrieving build artifacts
+### Navigation Controls
 
-Successful builds on GitHub Actions will produce build artifacts that can be downloaded for testing. These artifacts are commonly simple archives and will not contain package installers or installation programs.
+Once configured, you'll find three buttons in the source toolbar:
+- **Previous**: Go to the previous lyric line (or previous song if at the beginning)
+- **Show/Hide**: Toggle lyrics visibility (background remains visible)
+- **Next**: Go to the next lyric line (or next song if at the end)
 
-### Building a Release
+### Hotkeys
 
-To create a release, an appropriately named tag needs to be pushed to the `main`/`master` branch using semantic versioning (e.g., `12.3.4`, `23.4.5-beta2`). A draft release will be created on the associated repository with generated installer packages or installation programs attached as release artifacts.
+You can assign hotkeys for navigation in OBS Settings > Hotkeys:
+- **Next Lyric**: Move to the next lyric
+- **Previous Lyric**: Move to the previous lyric
+- **Show/Hide Lyrics**: Toggle lyrics visibility
 
-## Signing and Notarizing on macOS
+## Building from Source
 
-Basic concepts of codesigning and notarization on macOS are explained in the correspodning [Wiki article](https://github.com/obsproject/obs-plugintemplate/wiki/Codesigning-On-macOS) which has a specific section for the [GitHub Actions setup](https://github.com/obsproject/obs-plugintemplate/wiki/Codesigning-On-macOS#setting-up-code-signing-for-github-actions).
+### Prerequisites
+
+- CMake 3.28 or higher
+- OBS Studio development libraries
+- Qt 6.x
+- C++ compiler with C++17 support
+
+### Build Instructions
+
+1. Clone the repository
+2. Configure the project:
+   ```bash
+   cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+   ```
+3. Build the plugin:
+   ```bash
+   cmake --build build --config Release
+   ```
+
+## Troubleshooting
+
+- **Lyrics not displaying**: Ensure your .txt files are properly formatted and saved in UTF-8 encoding
+- **Text cut off**: Increase the text width/height in properties
+- **Background not showing**: Check that the image file path is valid and the image format is supported
+
+## License
+
+This plugin is licensed under the GNU General Public License v2.0. See LICENSE for details.
